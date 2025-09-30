@@ -40,7 +40,7 @@ Phase 2 — Data fetching (Days 2–4)
 
     -Current location
 
-    -Selected day
+    -Selected day - hourly
 
     -Selected unit system
 
@@ -58,7 +58,13 @@ Phase 4 — Polish & Deploy (Days 6–7)
 
 - Add loading indicators.
 
-- Test on mobile and desktop.
+- Clean code. -> into components
+
+Phase 5 - Submission check ups (Days 8-9-10)
+
+- live website check
+- Readme file
+- submission details and requirements
 
 ---
 
@@ -72,29 +78,38 @@ Ship incrementally; don’t try to build everything at once.
 ---
 
 _what data is required on the page?_
-the location from user input
-today's day and date
-temperature
-is day sun night moon
-the feels like - humidity - wind -precipitation
 
-daily forecast - 7 days -> day name - icon - min&max
+- current weather
 
-hourly forecast - this hour + 7 hours later so 8?? -> icon - hour - pm or am 'isDay' - temperature
+  - the location from user input DONE
+  - today's day and date DONE
+  - temperature DONE
+  - is day sun night moon DONE
+  - the feels like DONE
+  - humidity DONE
+  - wind DONE
+  - precipitation DONE
 
-QUESTION: what are the icons based on?
-QUESTION: how many hours on the hourly forecast from now?
+- daily forecast - 7 days
+
+  - day name DONE
+  - icon QUESTION: what are the icons based on?
+  - min&max DONE
+
+- hourly forecast - this hour + 5
+  - icon
+  - hour DONE
+  - pm or am 'isDay' DONE
+  - temperature DONE
 
 ---
 
 _what are the main functionalities, what can the user do/interact/request/ask?_
 
-Search location.
+- Search location. DONE
 
-change the unit of.....
-change the day in hourly forecast - list is always from Monday to Sunday.
-
-QUESTION: when a user change the day in hourly to tomorrow at what time does the hourly forecast start?
+- change the unit of.....
+- change the day in hourly forecast - list is always from Monday to Sunday. QUESTION: when a user change the day in hourly to tomorrow at what time does the hourly forecast start?
 
 ---
 
@@ -120,10 +135,101 @@ many options? drop down menu to the user.
 STEPS:
 
 - user enter the city
-- the geocoding api will return one or multiple cities that matches the user input.
+- the geocoding api will return one or multiple cities that matches the user input. - only the city name.
 - the user will choose from the drop down menu -> city, country format.
 - send the chosen one's lat and long to the open mateo api.
 
 ---
 
 ## I found an amazing animation library with a collection of ready-made animations. why reinvent the wheel?
+
+--
+17/9/2025 Wednesday
+Phase 2 — Data fetching (Days 2–4)
+
+-Implement current weather first. DONE
+
+-Implement 7-day forecast. DONE
+
+-Implement hourly forecast. DONE
+
+-Add unit toggling (C/F, mph/kmh, etc.) - temperature/feels like/min&max/hourly forecast - wind - precipitation.
+
+-Use useEffect + state hooks to fetch data based on:
+
+    -Current location
+
+    -Selected day - hourly
+
+    -Selected unit system
+
+---
+
+- I had to turn on the timezone auto detection, cuz I was getting the is day value incorrect since the time was not inaccurate.
+- in the daily forcase we fetch the date from the time attribute, how to convert it into day labels? use toLocaleDateString method inside the Date object. -> use the same method in the current weather to get day label, day, month, and year.
+- range the hourly forecase to 6 hours only. current + 5.
+
+---
+
+_data left to fetch:_
+
+- daily forecast - 7 days
+  - icon QUESTION: what are the icons based on?
+- hourly forecast - this hour + 5
+  - icon QUESTION: what are the icons based on?
+
+_functionalities left:_
+
+- change the unit of.
+- change the day in hourly forecast -> drop-down menu is always from Monday to Sunday. QUESTION: when a user change the day in hourly to tomorrow at what time does the hourly forecast start?
+
+_phase 2:_
+
+- Add unit toggling (C/F, mph/kmh, etc.) - temperature/feels like/min&max/hourly forecast - wind - precipitation.
+
+- Use useEffect + state hooks to fetch data based on:
+
+  -Current location [user input search] DONE
+
+  -Selected day - hourly [when the user change the day in hourly]
+
+  -Selected unit system [when the user change the unit of any data]
+
+QUESTION: what are the icons based on?
+WMO code
+https://gist.github.com/stellasphere/9490c195ed2b53c707087c8c2db4ec0c#file-descriptions-json
+
+---
+
+Tuesday 30/9/2025
+6 days left on submissions, I am already behind but lets try and push it.
+problem: unit systems
+Q: what can users do/change?
+A: either the whole unit system or an indivisual measure
+notes: changing unit system reflect on the individual inputs but not vice versa - the api request does not accept metric units, only imperial.
+
+steps:
+1- switching unit systems
+
+- add radio inputs
+- update unit state accordingly
+- add params to api request
+- update ui to reflect changes
+  2- integrate switching individual units
+  - Q: do we need different state for each unit or can we use the same unit system state?
+  - A: we need a different state for each measurement since user can change the (ex. temperature) only.
+  - inputs for each measure
+  - handle a change of each input by updating its state.
+  - refetch with dynamic url
+
+3- integration
+
+- when user switch metric/imperial, reflect those changes on the individual measurement inputs -> inside switchSystem function set the state of each measurement.
+- Q: having multiple state 'system and individual' what is the UI's source of truth, we will face a lot of conflict when it comes to priorities, is the priority for the system units or the individual changes?
+- A: had to add another value 'custom' to the unit system state for better control -> the state equals this value only if the user changed a unit for one of the measurements and not the whole system. metric -> metric units, imperial -> imperial units, custom -> the units are chosen by the user. Why? this is crucial to avoid conflict or overriding of system unit and individual unit states. Once the user change an individual unit it takes priority over the imperial/metric, how? whenever the user pick a single unit, change the system state into custom.
+
+4- the dynamic url
+
+- have a baseUrl to fetch data of a city with default units
+- create an array for params to add user's unit selections.
+- everytime a unit state changes, push the corressponding units into the params array.
