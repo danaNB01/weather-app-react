@@ -233,3 +233,54 @@ steps:
 - have a baseUrl to fetch data of a city with default units
 - create an array for params to add user's unit selections.
 - everytime a unit state changes, push the corressponding units into the params array.
+
+EXTRA FUNCTIONS:
+
+- Add geolocation detection to automatically show weather for the user's current location on first visit
+- Implement a favorites/saved locations system where users can bookmark frequently checked locations
+- Implement a "Compare Locations" feature to view weather side-by-side for multiple locations
+- Include UV index, visibility, and air pressure data (available via Open-Meteo)
+- Add sunrise/sunset times with visual indicators
+- Add animated weather backgrounds that change based on current conditions
+- Implement voice search functionality
+- Create dark/light mode themes that adapt to the time of day
+- Add progressive web app (PWA) capabilities for mobile installation
+- More days to the 7 days forecase 'slide', in the api docs you can add how many days ahead.
+
+---
+
+Yes, I'm absolutely sure. That's a great question to ask, as API documentation can sometimes be dense. The parameter is definitely there, and it's the standard way to request a multi-day forecast.
+
+The confusion might arise because forecast_hours and forecast_days are two different ways to control the forecast period. You typically use one or the other, not both.
+
+Where to Find it in the Documentation
+You can find this parameter in the main Open-Meteo Forecast API documentation under the "Request Parameters" section.
+
+Here's a breakdown of the relevant parameters that control the time interval:
+
+forecast_days: This parameter lets you specify the number of days for the forecast, from 1 to 16. If you don't specify any time range, the API defaults to 7 days.
+
+forecast_hours: This is for getting a very short-term forecast. It can be set to 24, 48, 72, or 96 hours. It overrides the forecast_days setting.
+
+past_days: Lets you retrieve historical data for the last 92 days.
+
+Why the Change Works
+In your original code, you used forecast_hours=6. This specifically told the API: "Ignore the default 7-day forecast; I only want the next 6 hours of hourly data."
+
+By removing forecast_hours=6, you are removing that specific instruction. The API then reverts to its default behavior, which is to provide a 7-day forecast.
+
+Adding forecast_days=7 is technically not even necessary (since it's the default), but it makes the code much clearer and explicitly states your intention to get a 7-day forecast. It's good practice to be explicit.
+
+So, the proposed change is the correct and standard method for getting the full 7-day hourly data you need for your dropdown menu.
+
+--
+is threr a way ti limit the hours displayed for each day? also what makes more since is it more reliable to display the current hour with next like 6 hours, then for the other days it starts from 12 am, i don't know what is better for a user experience?
+
+This gives users immediate, relevant information for "right now" while providing a complete overview for future planning.
+
+You can achieve this -> by adding a simple check. Before rendering the hourly list, determine if the selectedDay is today. If it is, filter out past hours.
+steps:
+
+- Get Today's Date: First, we need a string for today's date in the same YYYY-MM-DD format that the API uses.
+
+- Apply Conditional Filtering: Create a new variable (displayableHourlyData) that will hold the final list of hours to be shown. If the selected day is today, we filter and slice it. Otherwise, we use the full 24-hour list.

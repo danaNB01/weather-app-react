@@ -4,11 +4,19 @@ import { useState, useEffect } from "react";
 import weather_codes from "./weather_codes.json";
 
 function App() {
+  // TODO: DO I NEED ALL 24 HOURS FOR FUTURE DAYS?
+  // TODO: WHY THE FUTURE DAYS DON'T START FROM 12 AM?
   const [city, setCity] = useState(""); // user input city
   const [cityData, setCityData] = useState(null); // fetched city data from geocoding API
 
   const [selectedLocation, setSelectedLocation] = useState(null); // user selected location from the list.
   const [forecast, setForecast] = useState(null); // fetched weather data for the selected location from open meteo API
+
+  // NEW STATE: To track which day's hourly forecast to show.
+  // It will store a date string like "2025-10-01".
+  // TODO: HERE
+
+  const [selectedDay, setSelectedDay] = useState("");
 
   /* 
   metric ->
@@ -44,7 +52,7 @@ function App() {
   useEffect(() => {
     if (!selectedLocation) return;
 
-    let baseUrl = `https://api.open-meteo.com/v1/forecast?latitude=${selectedLocation.lat}&longitude=${selectedLocation.lon}&current=weather_code,temperature_2m,is_day,apparent_temperature,wind_speed_10m,relative_humidity_2m,precipitation&daily=temperature_2m_max,temperature_2m_min&hourly=temperature_2m&forecast_hours=6&timezone=auto`;
+    let baseUrl = `https://api.open-meteo.com/v1/forecast?latitude=${selectedLocation.lat}&longitude=${selectedLocation.lon}&current=weather_code,temperature_2m,is_day,apparent_temperature,wind_speed_10m,relative_humidity_2m,precipitation&daily=temperature_2m_max,temperature_2m_min&hourly=temperature_2m&forecast_days=7&timezone=auto`;
 
     let params = [];
 
@@ -63,10 +71,15 @@ function App() {
 
     // if parameters exist (imperial or custom), append them to the base URL, otherwise use the base URL as is (metric).
     const url = baseUrl + (params.length ? "&" + params.join("&") : "");
-
+    // TODO: HERE
     axios
       .get(url)
-      .then((response) => setForecast(response.data))
+      .then((response) => {
+        setForecast(response.data);
+        if (response.data?.daily?.time?.length > 0) {
+          setSelectedDay(response.data.daily.time[0]);
+        }
+      })
       .catch((err) => console.error("Error fetching weather:", err));
   }, [selectedLocation, system, temperatureUnit, windUnit, precipUnit]);
 
@@ -116,6 +129,38 @@ function App() {
   function handlePrecipChange(unit) {
     setSystem("custom");
     setPrecipUnit(unit);
+  }
+
+  // --------
+  // TODO: HERE
+  // NEW: Logic to filter the full hourly forecast data for the selected day.
+  const hourlyDataForSelectedDay = forecast
+    ? forecast.hourly.time
+        .map((time, index) => ({
+          time: new Date(time),
+          temp: forecast.hourly.temperature_2m[index],
+        }))
+        .filter((item) => item.time.toISOString().startsWith(selectedDay))
+    : [];
+
+  //--------
+  // TODO: HERE
+
+  // ✅ NEW LOGIC: Conditionally filter the hours to display
+  let displayableHourlyData = hourlyDataForSelectedDay;
+  if (forecast) {
+    // Get today's date in YYYY-MM-DD format
+    const todayString = new Date().toISOString().split("T")[0];
+
+    // If the selected day is today...
+    if (selectedDay === todayString) {
+      const now = new Date();
+      // ...filter out past hours and limit the list.
+      // We use slice(0, 7) to show the current hour + the next 6.
+      displayableHourlyData = hourlyDataForSelectedDay
+        .filter((item) => item.time >= now)
+        .slice(0, 7);
+    }
   }
 
   return (
@@ -244,15 +289,42 @@ function App() {
               </li>
             ))}
           </ul>
-          <h3>6-hour Forecast</h3>
+          {/* TODO: HERE
+           */}
+          <h3>Hourly Forecast</h3>
+          <label htmlFor="day-select">Select a day: </label>
+          <select
+            id="day-select"
+            value={selectedDay}
+            onChange={(e) => setSelectedDay(e.target.value)}
+          >
+            {forecast.daily.time.map((date, index) => {
+              let label = "";
+              if (index === 0) label = "Today";
+              else if (index === 1) label = "Tomorrow";
+              else
+                label = new Date(date).toLocaleDateString("en-US", {
+                  weekday: "long",
+                });
+              return (
+                <option key={date} value={date}>
+                  {label}
+                </option>
+              );
+            })}
+          </select>
+
+          {/* TODO: HERE
+           */}
+          {/* MODIFIED: Map over the new `displayableHourlyData` variable */}
           <ul>
-            {forecast.hourly.time.slice(0, 6).map((time, index) => (
-              <li key={time}>
-                {new Date(time).toLocaleTimeString("en-US", {
+            {displayableHourlyData.map((item) => (
+              <li key={item.time.toISOString()}>
+                {item.time.toLocaleTimeString("en-US", {
                   hour: "numeric",
                   hour12: true,
                 })}
-                : {forecast.hourly.temperature_2m[index]}
+                : {item.temp}
                 {forecast.current_units.temperature_2m}
               </li>
             ))}
