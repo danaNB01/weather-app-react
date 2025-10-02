@@ -16,6 +16,7 @@ function App() {
   // It will store a date string like "2025-10-01".
   // TODO: HERE
 
+  // format is "YYYY-MM-DD"
   const [selectedDay, setSelectedDay] = useState("");
 
   /* 
@@ -52,7 +53,7 @@ function App() {
   useEffect(() => {
     if (!selectedLocation) return;
 
-    let baseUrl = `https://api.open-meteo.com/v1/forecast?latitude=${selectedLocation.lat}&longitude=${selectedLocation.lon}&current=weather_code,temperature_2m,is_day,apparent_temperature,wind_speed_10m,relative_humidity_2m,precipitation&daily=temperature_2m_max,temperature_2m_min&hourly=temperature_2m&forecast_days=7&timezone=auto`;
+    let baseUrl = `https://api.open-meteo.com/v1/forecast?latitude=${selectedLocation.lat}&longitude=${selectedLocation.lon}&current=weather_code,temperature_2m,is_day,apparent_temperature,wind_speed_10m,relative_humidity_2m,precipitation&daily=weather_code,temperature_2m_max,temperature_2m_min&hourly=weather_code,is_day,temperature_2m&forecast_days=7&timezone=auto`;
 
     let params = [];
 
@@ -76,6 +77,8 @@ function App() {
       .get(url)
       .then((response) => {
         setForecast(response.data);
+        console.log("Fetched weather data:", response.data);
+        // Set the selected day to the first day 'today.'
         if (response.data?.daily?.time?.length > 0) {
           setSelectedDay(response.data.daily.time[0]);
         }
@@ -133,20 +136,37 @@ function App() {
 
   // --------
   // TODO: HERE
-  // NEW: Logic to filter the full hourly forecast data for the selected day.
+  // --------
+  // NEW CODE:
+  // hourly data = get the hourly data for the selected day
   const hourlyDataForSelectedDay = forecast
-    ? forecast.hourly.time
+    ? // Merge the 2 arrays 'time' and 'temperature_2m' into an array of objects
+      // UPDATED: Merging all required hourly data, including weather_code and is_day.
+      forecast.hourly.time
         .map((time, index) => ({
           time: new Date(time),
           temp: forecast.hourly.temperature_2m[index],
+          weatherCode: forecast.hourly.weather_code[index],
+          isDay: forecast.hourly.is_day[index],
         }))
-        .filter((item) => item.time.toISOString().startsWith(selectedDay))
+        .filter((item) => {
+          // Use the 'sv' (Swedish) locale settings to reliably get the
+          // YYYY-MM-DD format based on the item's LOCAL time zone.
+          const itemLocalDay = item.time.toLocaleDateString("sv", {
+            year: "numeric",
+            month: "2-digit", // Use '2-digit' for reliable formatting
+            day: "2-digit",
+          }); // Result: "2025-10-03"
+
+          // selectedDay is also YYYY-MM-DD (e.g., "2025-10-03")
+          return itemLocalDay === selectedDay;
+        })
     : [];
 
   //--------
   // TODO: HERE
 
-  // ✅ NEW LOGIC: Conditionally filter the hours to display
+  // Conditionally filter the hours to display
   let displayableHourlyData = hourlyDataForSelectedDay;
   if (forecast) {
     // Get today's date in YYYY-MM-DD format
@@ -155,14 +175,20 @@ function App() {
     // If the selected day is today...
     if (selectedDay === todayString) {
       const now = new Date();
-      // ...filter out past hours and limit the list.
-      // We use slice(0, 7) to show the current hour + the next 6.
-      displayableHourlyData = hourlyDataForSelectedDay
-        .filter((item) => item.time >= now)
-        .slice(0, 7);
+      // filter out past hours
+      displayableHourlyData = hourlyDataForSelectedDay.filter(
+        (item) => item.time >= now
+      );
+    } else {
+      // For future days, show all 24 hours (no filtering needed)
+      displayableHourlyData = hourlyDataForSelectedDay;
     }
   }
-
+  // Logic for the CURRENT weather icon
+  const isDay = forecast?.current?.is_day ? "day" : "night";
+  const currentWeatherInfo =
+    weather_codes?.[forecast?.current?.weather_code]?.[isDay];
+  //--------
   return (
     <>
       <form onSubmit={handleSearch}>
@@ -231,21 +257,16 @@ function App() {
 
           <h2>
             Weather for {selectedLocation.name}
-            {forecast.current.is_day ? (
-              <img
-                src={weather_codes[forecast.current.weather_code].day.image}
-                alt={`an icon of ${
-                  weather_codes[forecast.current.weather_code].day.description
-                }`}
-              />
-            ) : (
-              <img
-                src={weather_codes[forecast.current.weather_code].night.image}
-                alt={`an icon of ${
-                  weather_codes[forecast.current.weather_code].night.description
-                }`}
-              />
-            )}
+            {/* UPDATED: Current Weather Icon - dynamic day/night */}
+            <img
+              src={currentWeatherInfo?.image ?? ""}
+              alt={currentWeatherInfo?.description ?? "current weather"}
+              style={{
+                verticalAlign: "middle",
+                margin: "0 10px",
+                height: "50px",
+              }}
+            />
             {new Date(forecast.current.time.split("T")[0]).toLocaleDateString(
               "en-US",
               {
@@ -276,18 +297,33 @@ function App() {
 
           <h3>7-day Forecast</h3>
           <ul>
-            {/* get the dates and convert into day labels. */}
-            {forecast.daily.time.map((date, index) => (
-              <li key={date}>
-                {new Date(date).toLocaleDateString("en-US", {
-                  weekday: "long",
-                })}
-                : Min {forecast.daily.temperature_2m_min[index]}
-                {forecast.current_units.temperature_2m}, Max{" "}
-                {forecast.daily.temperature_2m_max[index]}
-                {forecast.current_units.temperature_2m}
-              </li>
-            ))}
+            {forecast.daily.time.map((date, index) => {
+              // UPDATED: Daily Forecast Icon Logic
+              const dailyWeatherCode = forecast.daily.weather_code[index];
+              // ALWAYS use the .day icon for a daily summary.
+              const dailyWeatherInfo = weather_codes?.[dailyWeatherCode]?.day;
+
+              return (
+                <li key={date}>
+                  {new Date(date).toLocaleDateString("en-US", {
+                    weekday: "long",
+                  })}
+                  <img
+                    src={dailyWeatherInfo?.image ?? ""}
+                    alt={dailyWeatherInfo?.description ?? "weather"}
+                    style={{
+                      verticalAlign: "middle",
+                      margin: "0 5px",
+                      height: "40px",
+                    }}
+                  />
+                  : Min {forecast.daily.temperature_2m_min[index]}
+                  {forecast.current_units.temperature_2m}, Max{" "}
+                  {forecast.daily.temperature_2m_max[index]}
+                  {forecast.current_units.temperature_2m}
+                </li>
+              );
+            })}
           </ul>
           {/* TODO: HERE
            */}
@@ -314,20 +350,33 @@ function App() {
             })}
           </select>
 
-          {/* TODO: HERE
-           */}
-          {/* MODIFIED: Map over the new `displayableHourlyData` variable */}
           <ul>
-            {displayableHourlyData.map((item) => (
-              <li key={item.time.toISOString()}>
-                {item.time.toLocaleTimeString("en-US", {
-                  hour: "numeric",
-                  hour12: true,
-                })}
-                : {item.temp}
-                {forecast.current_units.temperature_2m}
-              </li>
-            ))}
+            {displayableHourlyData.map((item) => {
+              // UPDATED: Hourly Forecast Icon Logic
+              const hourlyIsDay = item.isDay ? "day" : "night";
+              const hourlyWeatherInfo =
+                weather_codes?.[item.weatherCode]?.[hourlyIsDay];
+
+              return (
+                <li key={item.time.toISOString()}>
+                  {item.time.toLocaleTimeString("en-US", {
+                    hour: "numeric",
+                    hour12: true,
+                  })}
+                  <img
+                    src={hourlyWeatherInfo?.image ?? ""}
+                    alt={hourlyWeatherInfo?.description ?? "weather"}
+                    style={{
+                      verticalAlign: "middle",
+                      margin: "0 5px",
+                      height: "40px",
+                    }}
+                  />
+                  : {item.temp}
+                  {forecast.current_units.temperature_2m}
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}

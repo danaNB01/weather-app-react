@@ -284,3 +284,50 @@ steps:
 - Get Today's Date: First, we need a string for today's date in the same YYYY-MM-DD format that the API uses.
 
 - Apply Conditional Filtering: Create a new variable (displayableHourlyData) that will hold the final list of hours to be shown. If the selected day is today, we filter and slice it. Otherwise, we use the full 24-hour list.
+
+---
+
+PROBLEM:
+ok another question, in the hourly section for today it filters out the past hours and slice out to show current + next 6 hours. 1- i wanna filter out past hours but show the next hours till the end of the day. 2- for days other than today the day starts at 3 am and not 12 am
+
+1- To show all remaining hours for the current day instead of just the next 7, you simply need to remove the .slice(0, 7) call from your condition for today's date.
+
+2- The reason your future days start at an offset (like 3 AM) is due to the time zone offset of the location you selected.
+
+// Get the hourly data for the selected day
+const hourlyDataForSelectedDay = forecast
+? // Merge the 2 arrays 'time' and 'temperature_2m' into an array of objects
+forecast.hourly.time
+.map((time, index) => ({
+time: new Date(time),
+temp: forecast.hourly.temperature_2m[index],
+}))
+.filter((item) => item.time.toISOString().startsWith(selectedDay))
+: []; this one to get the hourly data for the selected day whihc is good in UTC-based, but the data is edited based on the user's browser's timezone and in our case Riyadh UTC+3. so we end up with midnight offset issue and start the day at 3 AM.
+how to fix? use
+
+---
+
+    PROBLEM: USING If you were to use a different locale, like 'en-US', the output would be MM/DD/YYYY (e.g., "10/03/2025"), which wouldn't match your selectedDay format and would break the filter.
+    When you call item.time.toISOString(), JavaScript converts the Date object to a UTC string.
+
+For the 12:00 AM entry on Oct 3rd in Riyadh (UTC+3), the UTC time is 3 hours earlier: 2025-10-02T21:00:00.000Z.
+
+item.time.toISOString() returns "2025-10-02...".
+
+Your filter checks if this starts with selectedDay (e.g., "2025-10-03").
+
+Result: It returns false, and the 12:00 AM, 1:00 AM, and 2:00 AM entries for Oct 3rd are filtered out, making the day appear to start at 3:00 AM.
+
+    solution: filter the hourly data based on the local date of the time entry
+
+We used the Swedish locale code ('sv') in toLocaleDateString('sv', ...) because it is one of the most reliable ways in JavaScript to guarantee the output format is the ISO standard YYYY-MM-DD (e.g., "2025-10-03"). This was necessary to correctly filter the hourly weather data. By using the toLocaleDateString() method, we ensured the date was calculated based on the data's local time zone (not UTC), which fixed the bug where future days appeared to start late (e.g., at 3 AM instead of 12 AM). In essence, we used 'sv' for its consistent format, not its language.
+
+more fancy answer but i don't like it -> We used the Swedish locale code ('sv') in toLocaleDateString() to ensure the generated date string reliably matches the YYYY-MM-DD format used by the API. This method is critical because it extracts the date based on the local time zone of the forecast, correctly aligning midnight (12 AM) entries with the intended calendar day and resolving the issue caused by filtering against UTC time.
+
+---
+
+
+Note:
+when it comes to icons ->
+daily is always at day never at night, only current and hourly can have night.
