@@ -308,8 +308,11 @@ how to fix? use
 
 ---
 
-    PROBLEM: USING If you were to use a different locale, like 'en-US', the output would be MM/DD/YYYY (e.g., "10/03/2025"), which wouldn't match your selectedDay format and would break the filter.
-    When you call item.time.toISOString(), JavaScript converts the Date object to a UTC string.
+// TODO: DO I NEED ALL 24 HOURS FOR FUTURE DAYS?
+// TODO: IF THE SELECTED DAY IN HOURLY IS TODAY DISPLAY START FROM CURRENT HOUR.
+// TODO: WHY THE FUTURE DAYS DON'T START FROM 12 AM?
+PROBLEM: USING If you were to use a different locale, like 'en-US', the output would be MM/DD/YYYY (e.g., "10/03/2025"), which wouldn't match your selectedDay format and would break the filter.
+When you call item.time.toISOString(), JavaScript converts the Date object to a UTC string.
 
 For the 12:00 AM entry on Oct 3rd in Riyadh (UTC+3), the UTC time is 3 hours earlier: 2025-10-02T21:00:00.000Z.
 
@@ -327,7 +330,8 @@ more fancy answer but i don't like it -> We used the Swedish locale code ('sv') 
 
 ---
 
-
 Note:
 when it comes to icons ->
 daily is always at day never at night, only current and hourly can have night.
+
+the icon for the current is outside the jsx cuz i cannot define it inside, but for daily and hourly the definiton is inside the map method so I can define a var also i need to get the weather code for EACH item.

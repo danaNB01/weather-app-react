@@ -4,8 +4,6 @@ import { useState, useEffect } from "react";
 import weather_codes from "./weather_codes.json";
 
 function App() {
-  // TODO: DO I NEED ALL 24 HOURS FOR FUTURE DAYS?
-  // TODO: WHY THE FUTURE DAYS DON'T START FROM 12 AM?
   const [city, setCity] = useState(""); // user input city
   const [cityData, setCityData] = useState(null); // fetched city data from geocoding API
 
@@ -14,7 +12,6 @@ function App() {
 
   // NEW STATE: To track which day's hourly forecast to show.
   // It will store a date string like "2025-10-01".
-  // TODO: HERE
 
   // format is "YYYY-MM-DD"
   const [selectedDay, setSelectedDay] = useState("");
@@ -72,7 +69,6 @@ function App() {
 
     // if parameters exist (imperial or custom), append them to the base URL, otherwise use the base URL as is (metric).
     const url = baseUrl + (params.length ? "&" + params.join("&") : "");
-    // TODO: HERE
     axios
       .get(url)
       .then((response) => {
@@ -134,10 +130,6 @@ function App() {
     setPrecipUnit(unit);
   }
 
-  // --------
-  // TODO: HERE
-  // --------
-  // NEW CODE:
   // hourly data = get the hourly data for the selected day
   const hourlyDataForSelectedDay = forecast
     ? // Merge the 2 arrays 'time' and 'temperature_2m' into an array of objects
@@ -186,7 +178,7 @@ function App() {
   }
   // Logic for the CURRENT weather icon
   const isDay = forecast?.current?.is_day ? "day" : "night";
-  const currentWeatherInfo =
+  const currentWeatherIcon =
     weather_codes?.[forecast?.current?.weather_code]?.[isDay];
   //--------
   return (
@@ -259,8 +251,8 @@ function App() {
             Weather for {selectedLocation.name}
             {/* UPDATED: Current Weather Icon - dynamic day/night */}
             <img
-              src={currentWeatherInfo?.image ?? ""}
-              alt={currentWeatherInfo?.description ?? "current weather"}
+              src={currentWeatherIcon?.image ?? ""}
+              alt={currentWeatherIcon?.description ?? "current weather"}
               style={{
                 verticalAlign: "middle",
                 margin: "0 10px",
@@ -301,7 +293,7 @@ function App() {
               // UPDATED: Daily Forecast Icon Logic
               const dailyWeatherCode = forecast.daily.weather_code[index];
               // ALWAYS use the .day icon for a daily summary.
-              const dailyWeatherInfo = weather_codes?.[dailyWeatherCode]?.day;
+              const dailyWeatherIcone = weather_codes?.[dailyWeatherCode]?.day;
 
               return (
                 <li key={date}>
@@ -309,8 +301,8 @@ function App() {
                     weekday: "long",
                   })}
                   <img
-                    src={dailyWeatherInfo?.image ?? ""}
-                    alt={dailyWeatherInfo?.description ?? "weather"}
+                    src={dailyWeatherIcone?.image ?? ""}
+                    alt={dailyWeatherIcone?.description ?? "weather"}
                     style={{
                       verticalAlign: "middle",
                       margin: "0 5px",
@@ -325,8 +317,6 @@ function App() {
               );
             })}
           </ul>
-          {/* TODO: HERE
-           */}
           <h3>Hourly Forecast</h3>
           <label htmlFor="day-select">Select a day: </label>
           <select
@@ -352,9 +342,8 @@ function App() {
 
           <ul>
             {displayableHourlyData.map((item) => {
-              // UPDATED: Hourly Forecast Icon Logic
               const hourlyIsDay = item.isDay ? "day" : "night";
-              const hourlyWeatherInfo =
+              const hourlyWeatherIcon =
                 weather_codes?.[item.weatherCode]?.[hourlyIsDay];
 
               return (
@@ -364,8 +353,8 @@ function App() {
                     hour12: true,
                   })}
                   <img
-                    src={hourlyWeatherInfo?.image ?? ""}
-                    alt={hourlyWeatherInfo?.description ?? "weather"}
+                    src={hourlyWeatherIcon?.image ?? ""}
+                    alt={hourlyWeatherIcon?.description ?? "weather"}
                     style={{
                       verticalAlign: "middle",
                       margin: "0 5px",
