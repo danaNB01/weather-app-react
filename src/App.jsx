@@ -668,7 +668,8 @@ function HourlyForecast({
           )}
         </div>
       </div>
-      <ul className="space-y-4">
+      {/* FINAL CHANGE: Added fixed height and vertical scrolling to the list */}
+      <ul className="space-y-4 h-96 overflow-y-auto">
         {displayableHourlyData.map((item) => {
           const hourlyIsDay = item.isDay ? "day" : "night";
           const weatherInfo = weather_codes?.[item.weatherCode]?.[hourlyIsDay];
