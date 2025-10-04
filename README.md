@@ -335,3 +335,53 @@ when it comes to icons ->
 daily is always at day never at night, only current and hourly can have night.
 
 the icon for the current is outside the jsx cuz i cannot define it inside, but for daily and hourly the definiton is inside the map method so I can define a var also i need to get the weather code for EACH item.
+
+---
+
+Q:
+2- do i need to separate the weather_codes into different json files cuz the code is cluttered? 3- do i need to move components into different files and import them instead of them all being in the same app.jsx?
+
+A:
+Excellent questions. These are fundamental topics in organizing any React project, and it's smart to ask them now.
+
+Here are the short answers, followed by a quick explanation for each.
+
+### 2. Do I need to separate `weather_codes` into a different JSON file?
+
+**Short Answer:** No, for this project, you don't need to. Keeping it inside `App.jsx` is perfectly fine.
+
+**Explanation:**
+For a small, self-contained app like this, having the data directly in the file is simpler and avoids potential import issues. The standard practice for larger applications is to separate data into its own file (like `weather_codes.js` or `.json`) to keep the code clean. But given your 3-day deadline, your current approach is faster and more practical.
+
+### 3. Do I need to move components into different files?
+
+**Short Answer:** No, you don't have to for this deadline, but this is the most important concept of the two.
+
+**Explanation:**
+The way we broke the UI into small functions (`SearchBar`, `CurrentWeather`, etc.) is the most critical step. The next step in a real-world project would be to move each of those functions into its own file (e.g., `SearchBar.jsx`, `CurrentWeather.jsx`) and then import them into `App.jsx`.
+
+- **Why it's best practice:** It makes your code incredibly organized, easier to debug, and reusable.
+- **For your deadline:** Sticking with one file is okay. You have already learned the most important part: **thinking in components**. The physical separation into files is the logical next step when you have more time.
+
+---
+
+## TAILWIND
+
+since we only have 3 days left into submission and i am trying to learn tailwind as a beginner, for setup we will use the cdn method instead of importing dependencies inside index.css file.
+
+---
+
+shit -search is happening while typing-
+what to change?
+
+- add a new state to track live search term update
+- implement a Debounced effect to fetch and search for cities that mathces the live input of the user - wait 300ms after the user stops typing.
+
+---
+
+Notes:
+
+- remove the initial Berlin city 'so it does not trigger serach drop down' and selected location 'so it does not load Berlin data when the page first loads'.
+
+- which is better for a user experinece, when chaning a singe measruement the unit settings keep open which is good, but when changing the whole system when clicking imperial for example it closes the the drop down menu, does it make more sense or can we make it similar to single measurement change but then the user has to click somewhere else to close it? short answer
+  - The current behavior makes more sense and is a better user experience. A "system change" like clicking "Imperial" is a major, all-encompassing action. Closing the dropdown provides immediate, clear feedback that the user's primary goal is complete. Keeping it open for smaller, custom tweaks is also correct, as it allows the user to make multiple adjustments without extra clicks.
