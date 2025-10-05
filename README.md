@@ -4,6 +4,8 @@ Hey there! 👋 Welcome to my README file.
 
 I wanted to keep a running log of my thoughts, problems, and solutions as I built this weather app... so this could be a long read.
 
+✨ Check out the deployed project here: [Weather App Live Demo](https://weather-app-react-final-ghhwuqlko-dananb01s-projects.vercel.app/)
+
 ## 🗓️ The Journey Begins
 
 ### 10/9/2025 Wednesday
@@ -225,6 +227,13 @@ I used the **CDN method** for setup instead of importing dependencies into `inde
   - When changing a _single measurement_, the unit settings dropdown stays open – good, allows the user to implement multiple tweaks.
   - When changing the _whole system_ (e.g., clicking "Imperial"), the dropdown closes – this makes sense. It's a major action, and closing provides clear feedback that the primary goal is complete. Also, it's a better user experience than making the user click extra to close it.
 
+---
+
+## 🛠️ Technologies Used
+- **React** (Hooks: `useState`, `useEffect`)
+- **Axios** for API requests
+- **Tailwind** for styling
+  
 ---
 
 ## 🌟 Live Demo
